@@ -1,3 +1,177 @@
 ==BABL
 
 Babl is Another weBLog
+
+
+
+
+=OmniAuth Presentation Outline
+
+=Introduction
+
+==Who am I?
+@joshrowley, current student @FlatironSchool, former IT guy
+
+==What does this presentation cover?
+Deals with the common problem of authenticating users to your site.
+Will be a high level overview of authentication (specifically OAuth2)
+What can I use to integrate into my Rails application? => couple options, today: OmniAuth (abstracts away OAuth 2)
+How do I get started with the most basic
+
+==What does this presentation *not* cover?
+Implementing permissions on your sites resources
+Creating your own authentication user/pw in tandem with other providers? => Refer to Railscast
+
+
+
+=The Problem
+
+==BABL
+  I have my own app, and there's something about it that makes it special.
+
+  Usually, user authentication is not what makes your app special.
+
+  Even though user authentication is not special, I still need it for my application to work.
+
+  === What do I do?
+    Create my own authentication from scratch?
+
+
+      I'm reinventing the wheel (hasn't someone else figured this out)
+
+      I may not do it correctly
+
+      It's super critical that I get it right (don't want to get in trouble for exposing my user's private info)
+
+
+    Use an existing gem?
+
+      Devise...etc. (flesh out more examples)
+
+
+
+
+
+=OmniAuth
+==What exactly is it? / History
+
+
+
+  Written by Michael (3/30/10, first commit, 10/1/10 release) Bleigh with support from his employer Intridea (dev shop) see talk: http://www.intridea.com/blog/2011/5/31/omniauth-from-the-ground-up talks about the design thoughts and principles
+
+  Rack middleware library: sits between your Rails application and the web server
+    For Rack apps, we're not limited to Rails applications (Sinatra viable)
+
+    2 principles
+      login with anything
+      assume nothing
+
+    Magic box image slide
+
+  Why are there so many Ruby authentication frameworks?
+    devise
+    authlogic
+    clearance
+    sorcery
+    restful-authentication
+
+    They make assumptions!
+      only need one User model
+      signup and provide pw
+      only email validates user
+      only one authetication method
+
+      *i don't want to customize much*
+        structured (i'm building my app around my authentication library)
+
+      There's *ONE WAY* to authenticate with *ANY* provider
+      results are the same
+
+          OmniAuth blackbox
+            login => provider => callback hash with standard info
+
+          one interface for multiple providers
+
+          accomplished throught the strategy abstraction
+
+          not sure what happens
+          different providers may be different logic (oauth, oauth2, openid, custom auth system)
+
+          ALL I CARE ABOUT is the callback hash I get back
+
+          IMG: slide from his presentation on the magic
+
+          why is this abstraction good? What's the one thing I care about "user info"?
+            don't care how we get it!!!
+
+
+
+==Anatomy of OmniAuth: How does it do this?
+
+
+  Back to slide of magic box
+
+    OmniAuth is middleware
+
+      Every provider is represented through a strategy
+        What is a strategy? Just a class that inherits some stuff from the OmniAuth library
+
+      Every strategy has two main behaviors/phases that are defined in the Class
+
+        request phase
+
+        call back phase
+
+
+  Back to slide of magic box
+
+    point out => need auth => request phase, in my application I specify "Hey, a user needs to authenticate with a :provider"
+
+    In the view, there's a link_to provider => /auth/:provider
+      ex: /auth/facebook, /auth/twitter
+      these routes are picked up on by the OmniAuth middleware
+
+
+    point out => Magic Box => strategy 
+
+      each strategy is a class inheriting somes stuff from top level OmniAuth module
+
+
+        def request_phase do
+          ...
+        end
+
+        def callback_url do
+          ...
+        end
+
+        OR
+
+        def auth_hash do
+          ...
+        end
+
+
+
+  
+  Keeps eye out for this path: /auth/:provider (set in a config file)
+  When it picks up on a route that it's configured for it uses a "strategy" to abstract away the authentication process with the provider
+  OmniAuth is a black box, you supply app id and secret, OmniAuth figures out the transaction and returns you a nice hash with all the users info
+  Has provider send back hash to a callback route in your app, for OmniAuth it's /auth/:provider/callback
+    You'll need to have this is your routes.rb
+
+  TODO: flow chart of OmniAuth request
+
+
+
+==Implement OmniAuth!!!
+
+
+
+Challenge: Can you write a strategy?
+
+
+
+
+
+
