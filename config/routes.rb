@@ -1,5 +1,6 @@
 Babl::Application.routes.draw do
   root :to => 'posts#index'
+  # 3.1.5
   match '/auth/:provider/callback', :to => 'sessions#create'
   resources :posts
 

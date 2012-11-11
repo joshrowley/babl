@@ -29,7 +29,7 @@ end
 
   gem 'jquery-rails'
 
-  # Step 1
+  # 3.1.1
   gem 'omniauth-facebook'
 
 
