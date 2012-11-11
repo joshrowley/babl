@@ -167,6 +167,210 @@ Creating your own authentication user/pw in tandem with other providers? => Refe
 ==Implement OmniAuth!!!
 
 
+Part 1: Getting the authentication hash.
+
+*Step 0:* Setup your application with the provider
+
+In the case of this Facebook example, I'm going to want to go to Facebook's Developer page, register my application, and grab the 
+
+
+*Step 1:* Add the provider's gem to your Gemfile
+
+    gem 'omniauth'
+    gem 'omniauth-facebook'
+
+
+
+*Step 2:* Run bundle install to load OmniAuth into your application environment
+
+    $ bundle install
+
+
+*Step 3:* Create initializer, so that OmniAuth middleware starts up with your app.
+
+    $ touch config/initializers/omniauth.rb
+
+omniauth.rb
+
+    Rails.application.config.middleware.use OmniAuth::Builder do
+      
+      provider :facebook, 'APP_ID', 'APP_SECRET'
+
+      provider :twitter, 'CONSUMER_KEY', 'CONSUMER_SECRET'
+      provider :linked_in, 'CONSUMER_KEY', 'CONSUMER_SECRET'
+
+    end
+
+So now we can see that OmniAuth should be running as middleware
+
+    $ rails server
+
+Now, check out localhost:3000/auth/facebook
+
+OmniAuth will do its magic based on the strategy given by the provider you specify.
+
+DEMO: Open up browser and show that the callback routes is missing.
+
+So OmniAuth did the request phase, redirected to Facebook's auth system. Once user enters correct password, Facebook tells OmniAuth the user is successfully authenticated and gives back user info in the format specific to FB's authentication method. OmniAuth is then going to go into the "callback" phase in order to return a hash with the info as an environment variable in the HTTP request.s
+
+OmniAuth will then make a GET request with this hash information to the /auth/:provider/callback route of the application.
+
+That's why right now it's giving a Missing Routes error. We need to define some kind of route and a controller that's going to handle the incoming request.
+
+Generally, this is done using a SessionsController, with a route pointing to 'sessions#create'. The SessionsController will then have a create method, that we'll be able to take the hash find a User in our application and generate a 'logged_in' session.
+
+First, routes.rb
+
+*Step 4*: Create the route that will respond to the callback message.
+
+    match '/auth/:provider/callback, :to => 'sessions#create'
+
+
+Great, so I've made the route. What do I need to do next...
+
+Define the Session create method in my Controller.
+
+
+So I'm going to generate a sessions controller.
+
+    $ rails g controller sessions
+
+
+*Step 5* Now to define the sessions#create method:
+
+in /app/controllers/sessions_controller.rb
+
+class SessionsController < ApplicationController
+  def create
+    render :text => request.env['omniauth.auth'].inspect
+  end
+end
+
+
+    '#<OmniAuth::AuthHash 
+        credentials=
+          #<Hashie::Mash
+            expires=true
+            expires_at=1357774112
+            token="AAAEV4AIlNYYBAE4MCGRj4RZAL1gWRboJqwXeYNZAqThDZA51fv3vIZCXIgIDz19vlalG7zyOBLfL0u2y8ZB6kiUJvF5vCE3wZD">
+      
+        extra=#<Hashie::Mash
+          raw_info=
+            #<Hashie::Mash
+                email="joshua.rowley@nyu.edu"
+                first_name="Josh"
+                gender="male"
+                id="837810"
+                last_name="Rowley"
+                link="http://www.facebook.com/joshuarowley"
+                locale="en_US"
+                name="Josh Rowley"
+                timezone=-5
+                updated_time="2012-10-12T02:49:25+0000"
+                username="joshuarowley"
+                verified=true
+              >
+          >
+        
+        info=
+          #<OmniAuth::AuthHash::InfoHash
+            email="joshua.rowley@nyu.edu"
+            first_name="Josh"
+            image="http://graph.facebookcom/837810/picture?type=square" last_name="Rowley"
+            name="Josh Rowley"
+            nickname="joshuarowley"
+            urls=
+              #<Hashie::Mash
+                Facebook="http://www.facebook.com/joshuarowley"
+                >
+            verified=true
+            >
+
+
+        provider="facebook"
+
+        uid="837810">'
+
+
+
+
+So, we can compare this with our spec of what the returned hash should look like.
+
+**show slide with anatomy of a hash
+
+
+
+GREAT!
+
+
+
+part 2: Casting that hash into my application based on my needs
+
+
+Now we as developers have the hash, time to decide what to do with it.
+We're going to want to persist data about newly authenticated users, because they we will now have blog posts that need can be associated with users.
+
+Thus, a User model was born!
+
+What do I want this User model to store. Well, what's great about OmniAuth is that I don't need to worry about whether some of my providers return a different type of object that the others. I always know that my hash is going to have the following information
+
+
+
+
+
+SHOW Bare Minimum
+
+
+SLIDE: attributes of the User
+
+auth.provider #=> identifies the auth service
+auth.uid #-> unique id for user on auth servcie
+auth.info.name #=> a name for the user
+
+User schema
+
+id    name    provider    uid  
+
+
+
+Wait a second though, this model schema is going to cause issues for us.
+
+Things get dicey once you want to allow users to authenticate using multiple providers, and not just one.
+
+You'll soon have a non-normalized database where the same person appears in the users table multiple times because they have multiple authorizations.
+
+So, what should we do, break out the authorizations into its own Model.
+
+rails g model User name:string
+
+rails g model Authorization provider:string uid:string user_id:integer
+
+uid is string b/c what if uid has letters? leave it flexible. Keep OmniAuth flexible.
+
+So now, User has_many :authorizations
+
+and Authorization belongs_to :user
+
+So I'll put in my in models
+
+user.rb
+  
+    class User << ActiveRecord::Base
+      has_many :authorizations
+    end
+
+    class Authorization
+      belongs_to :user
+    end
+
+
+
+
+
+
+
+
+
 
 Challenge: Can you write a strategy?
 
