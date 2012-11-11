@@ -1,4 +1,4 @@
-==Babl is Another weBLog
+=Babl is Another weBLog
 
 
 
@@ -20,16 +20,17 @@ OmniAuth
 3.  Implementing OmniAuth
     That's all fine and dandy, but how do I actually write the code?
 
-==What does this presentation *not* cover?
+==What does this presentation not cover?
 
 1.  Other authentication libraries, and how they compare to OmniAuth
     There are a ton of authentication libraries available for Rails
-    developers:
-      *   [devise](https://github.com/plataformatec/devise "Devise")
-      *   [authlogic](https://github.com/binarylogic/authlogic "Authlogic")
-      *   [clearance](https://github.com/thoughtbot/clearance "Clearance")
-      *   [sorcery](https://github.com/NoamB/sorcery "Sorcery")
-      *   [restful-authentication](https://github.com/technoweenie/restful-authentication "Restful Authentication")
+    developers. I don't really know enough about them to judge whether
+    these might be better solution for you:
+  *   [devise](https://github.com/plataformatec/devise "Devise")
+  *   [authlogic](https://github.com/binarylogic/authlogic "Authlogic")
+  *   [clearance](https://github.com/thoughtbot/clearance "Clearance")
+  *   [sorcery](https://github.com/NoamB/sorcery "Sorcery")
+  *   [restful-authentication](https://github.com/technoweenie/restful-authentication "Restful Authentication")
 
 
 Deals with the common problem of authenticating users to your site.
