@@ -341,11 +341,20 @@ You'll soon have a non-normalized database where the same person appears in the 
 
 So, what should we do, break out the authorizations into its own Model.
 
-rails g model User name:string
+*Step 6:*
 
-rails g model Authorization provider:string uid:string user_id:integer
+    $ rails g model User name:string
+
+    $ rails g model Authorization provider:string uid:string user_id:integer
 
 uid is string b/c what if uid has letters? leave it flexible. Keep OmniAuth flexible.
+
+
+*Step 7:* Migrate DB
+
+    $ rake db:migrate
+
+
 
 So now, User has_many :authorizations
 
