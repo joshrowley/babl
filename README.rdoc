@@ -355,6 +355,7 @@ uid is string b/c what if uid has letters? leave it flexible. Keep OmniAuth flex
     $ rake db:migrate
 
 
+*Step 8:* Add associations between User and Model
 
 So now, User has_many :authorizations
 
@@ -368,8 +369,27 @@ user.rb
       has_many :authorizations
     end
 
+authorization.rb
+
     class Authorization
       belongs_to :user
+    end
+
+
+*Step 9: Validate authorization's atrributes presence and uniqueness.
+
+
+I'm also going to throw some validations on here, so that authorizations must be created with an associated user, an external unique ID, and which provider it's associated with, as well as validate the uniqueness of the uid in the scope/context of their providers (with multiple providers, we have to ensure that two providers can have the same uid for two entries)
+
+
+authorization.rb
+
+    class Authorization
+      ...
+
+      validates_presence_of :user_id, :uid, :provider
+      validates_uniqueness_of :uid, :scope => :provider
+
     end
 
 
