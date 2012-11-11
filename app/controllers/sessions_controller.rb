@@ -4,15 +4,13 @@ class SessionsController < ApplicationController
 
     # render :text => request.env['omniauth.auth'].inspect.to_yaml
 
-    auth_hash = request.env['omniauth.auth']
+    auth = request.env['omniauth.auth']
 
-    @authorization = Authorization.find_by_provider_and_uid(auth_hash.info.provider, auth_hash.uid)
-
-    if @authorization
+    if @authorization = Authorization.find_by_provider_and_uid(auth.provider, auth.uid)
       render :text => "Welcome back #{@authorization.user.name}! You're logged in through #{@authorization.provider}."
     else
-      user = User.new(:name => auth_hash.info.name, :email => auth_hash.info.email)
-      user.authorizations.build(:provider => auth_hash.provider, :uid => auth_hash.uid)
+      user = User.find_or_create_by_email(:name => auth.info.name, :email => auth.info.email)
+      user.authorizations.build(:provider => auth.provider, :uid => auth.uid)
       user.save
       render :text => "Hi #{user.name}! Your account has been signed up."
     end

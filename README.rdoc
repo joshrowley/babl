@@ -2,12 +2,12 @@
 
 
 
-=Introduction
+=0.0 Introduction
 
-==Who am I?
+===Who am I?
 @joshrowley, current student @FlatironSchool, former IT guy
 
-==What does this presentation cover?
+===What does this presentation cover?
 
 OmniAuth
 
@@ -20,127 +20,240 @@ OmniAuth
 3.  Implementing OmniAuth
     That's all fine and dandy, but how do I actually write the code?
 
-==What does this presentation not cover?
+    #TODO: split out this third step into different parts so that
+    there are natural stopping points based on how far we get in the
+    implementation and how much time we have.
 
-1.  Other authentication libraries, and how they compare to OmniAuth
+===What does this presentation not cover?
+
+This presentation is meant as an introduction to OmniAuth and a quick start
+way to learn about how it can help you as a developer. Thus, I will covering
+the minimum basic concepts in order to authenticate a user. I will not be
+covering the following:
+
+1.  Other authentication libraries, and how they compare to OmniAuth  
     There are a ton of authentication libraries available for Rails
     developers. I don't really know enough about them to judge whether
     these might be better solution for you:
-  *[devise](https://github.com/plataformatec/devise "Devise")
-  *[authlogic](https://github.com/binarylogic/authlogic "Authlogic")
-  *[clearance](https://github.com/thoughtbot/clearance "Clearance")
-  *[sorcery](https://github.com/NoamB/sorcery "Sorcery")
-  *[restful-authentication](https://github.com/technoweenie/restful-authentication "Restful Authentication")
 
+      #TODO: figure out better markdown syntax for nested list
 
-Deals with the common problem of authenticating users to your site.
-Will be a high level overview of authentication (specifically OAuth2)
-What can I use to integrate into my Rails application? => couple options, today: OmniAuth (abstracts away OAuth 2)
-How do I get started with the most basic
+      [devise](https://github.com/plataformatec/devise "Devise")
+      [authlogic](https://github.com/binarylogic/authlogic "Authlogic")
+      [clearance](https://github.com/thoughtbot/clearance "Clearance")
+      [sorcery](https://github.com/NoamB/sorcery "Sorcery")
+      [restful-authentication](https://github.com/technoweenie/restful-authentication "Restful Authentication")
 
-==What does this presentation *not* cover?
-Implementing permissions on your sites resources
-Creating your own authentication user/pw in tandem with other providers? => Refer to Railscast
+2.  Implementing user permissions for your resources 
+    I'm going to show how to get a user authenticated in your, but you'll
+    need to figure out how you'll implement permissions for your app's
+    resources. Here are some resources that will help you if that's the
+    step your on.:
 
+    # TODO: Add some resources
 
-
-=The Problem
-
-==BABL
-  I have my own app, and there's something about it that makes it special.
-
-  Usually, user authentication is not what makes your app special.
-
-  Even though user authentication is not special, I still need it for my application to work.
-
-  === What do I do?
-    Create my own authentication from scratch?
-
-
-      I'm reinventing the wheel (hasn't someone else figured this out)
-
-      I may not do it correctly
-
-      It's super critical that I get it right (don't want to get in trouble for exposing my user's private info)
-
-
-    Use an existing gem?
-
-      Devise...etc. (flesh out more examples)
+3.  Low level examination of how OmniAuth works
+    We'll take a brief look at the overarching design of OmniAuth, but I
+    won't go into specific implementation and methods of the OmniAuth
+    module.
 
 
 
 
 
-=OmniAuth
-==What exactly is it? / History
+
+=1.0 What is OmniAuth? Why should we use it?
+
+
+===1.1 The Authentication Problem
+
+BABL is a blogging platform in development. It's going to reinvent
+what blogs can do. The dev team hasn't gotten far at all. So, far
+there's only a Post model and each post has a title and some content.
+
+from db/schema.rb:
+
+    create_table "posts", :force => true do |t|
+      t.string   "title"
+      t.text     "content"
+      t.datetime "created_at", :null => false
+      t.datetime "updated_at", :null => false
+    end
 
 
 
-  Written by Michael (3/30/10, first commit, 10/1/10 release) Bleigh with support from his employer Intridea (dev shop) see talk: http://www.intridea.com/blog/2011/5/31/omniauth-from-the-ground-up talks about the design thoughts and principles
+Trust me, there's some innovation coming down the pipeline. The BABL
+dev team's main focus is on the Post model, that's the core of their
+product.
 
-  Rack middleware library: sits between your Rails application and the web server
-    For Rack apps, we're not limited to Rails applications (Sinatra viable)
+But pretty soon, they'll need to implement some type of user authentication
+system. After all, we can't have anyone have access to creating, updating,
+and destroying posts.
 
-    2 principles
-      login with anything
-      assume nothing
 
-    Magic box image slide
-
-  Why are there so many Ruby authentication frameworks?
-    devise
-    authlogic
-    clearance
-    sorcery
-    restful-authentication
-
-    They make assumptions!
-      only need one User model
-      signup and provide pw
-      only email validates user
-      only one authetication method
-
-      *i don't want to customize much*
-        structured (i'm building my app around my authentication library)
-
-      There's *ONE WAY* to authenticate with *ANY* provider
-      results are the same
-
-          OmniAuth blackbox
-            login => provider => callback hash with standard info
-
-          one interface for multiple providers
-
-          accomplished throught the strategy abstraction
-
-          not sure what happens
-          different providers may be different logic (oauth, oauth2, openid, custom auth system)
-
-          ALL I CARE ABOUT is the callback hash I get back
-
-          IMG: slide from his presentation on the magic
-
-          why is this abstraction good? What's the one thing I care about "user info"?
-            don't care how we get it!!!
+It's crunch time, the BABL dev team needs to showcase their product to
+potential investors. They still have a ton of work to do on special Post
+related features, but they won't have any type of usable product to
+show if there's no user login! What are their options?
 
 
 
-==Anatomy of OmniAuth: How does it do this?
+=== 1.2 Options for adding authentication
+
+1. Create authentication from scratch
+
+The team could try writing their own authentication system.
+
+This seems like reinventing the wheel though right?. I mean
+what web application doesn't have user logins. Surely someone
+has figured out a pretty damn good way of doing it.
+
+There's also the possibility that they don't implement it correctly.
+There would need to be extensive testing throughout all layers of
+the application to find any security holes.
+
+This will also take a long time and demo day is soon!
 
 
-  Back to slide of magic box
 
-    OmniAuth is middleware
+2. Use existing authentication libraries
 
-      Every provider is represented through a strategy
-        What is a strategy? Just a class that inherits some stuff from the OmniAuth library
+Devise, Authlogic, Clearance, Sorcery, Restful Authentication
 
-      Every strategy has two main behaviors/phases that are defined in the Class
+You can create your own application's authentication system using
+open source gems like these.
 
-        request phase
+But, maybe I don't want to have my users have to remember another
+set of logins and passwords.
 
-        call back phase
+Furthermore, the team is really pressed for time, these authentciation
+libraries may have rigid requirements, or make rigid assumptions
+about how our application needs to architected.
+
+The BABL developers need to get it working ASAP, while maintaining
+flexibility for the future, when perhaps they'll add their own
+authentication. That leads them to...
+
+
+3. OmniAuth
+
+
+Written by Michael  Bleigh with support from his employer Intridea (dev shop) 
+(3/30/10, first commit, 10/1/10 release)
+see talk: http://www.intridea.com/blog/2011/5/31/omniauth-from-the-ground-up talks about the design thoughts and principles
+
+
+OmniAuth provides an easy abstract interface with authentication
+providers.
+
+OmniAuth is flexible and tries to make as little assumptions as
+possible. It's built to be able to authenticate with any external
+or internal authentication system, all you need to do is write
+a strategy.
+
+#TODO: Create slide of all the available provider strategies.
+
+The implementation of external provider doesn't matter as long
+as you have a strategy.
+
+#TODO: add examples of different auth systems
+
+OmniAuth standardizes the way you request
+authorization in your application as well as send back your
+application a cleaned up hash with all your user's info.
+
+# SLIDE: show magic diagram => THIS is why we should use OmniAuth
+# SLIDE: show basic required hash
+
+Omniauth gives us an easy way to authenticate users TODAY, while
+leaving a ton of flexibility to allow our application to authenticate
+with whatever the future may hold.
+
+
+
+
+
+
+
+
+
+
+=2.0: Anatomy of OmniAuth: How does this work?
+
+SLIDE: Magic Box
+
+So this diagram is easy to follow. My application triggers
+something (a user clicking on login) that will indicate
+to OmniAuth that I'm requesting authentication.
+
+Something happens, and then I get back an authentication hash
+back indicating that the external provider confirmed this persons
+identity. With this user info that I now can do whatever I want
+with in my application.
+
+But, at least for me this diagram is a little too abstract, so before
+we actually get into the actual implementation on how to integrate
+OmniAuth into our application, let's take a peek at the "magic".
+
+
+SLIDE: Facts about Omniauth
+
+
+
+===2.1: OmniAuth is middleware
+
+OmniAuth is Rack middleware that can be used with any Rack based
+Ruby applications.
+
+It's not just limited to Rails, you could use it in a Sinatra
+application as well like this:
+
+    require 'sinatra'
+    require 'omniauth'
+
+    class MyApplication < Sinatra::Base
+      use Rack::Session::Cookie
+      use OmniAuth::Strategies::Developer
+    end
+
+In a Rails application, you would add `config/initializers/omniauth.rb`
+
+`omniauth.rb`
+
+    Rails.application.config.middleware.use OmniAuth::Builder do
+      provider :twitter, ENV['TWITTER_KEY'], ENV['TWITTER_SECRET']
+      provider :facebook, YOUR_APP_ID, YOUR_APP_SECRET
+    end
+
+
+This tells Rails to use OmniAuth as middleware for facebook and twitter
+when the application boots. We'll go into this in more detail in the
+implementation.
+
+
+
+
+===2.2: Omniauth knows how to authenticate through "strategies"
+
+We'll take a look at the code a strategy entails in a little
+bit.
+
+SLIDE: providers again!
+
+What is a strategy? A bunch of Ruby code!
+
+Specifically, a strategy is class that inherits a bunch of
+magical stuff from an OmniAuth::Strategies module.
+
+
+Interaction with the strategy class can be defined into
+two phases: the request phase, and the callback phase
+
+
+
+===2.3 The Request Phase
+
+
 
 
   Back to slide of magic box
@@ -152,9 +265,7 @@ Creating your own authentication user/pw in tandem with other providers? => Refe
       these routes are picked up on by the OmniAuth middleware
 
 
-    point out => Magic Box => strategy 
-
-      each strategy is a class inheriting somes stuff from top level OmniAuth module
+    point out => Magic Box => Omniauth middleware with strategy logic inside.
 
 
         def request_phase do
