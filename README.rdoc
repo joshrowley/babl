@@ -1,11 +1,6 @@
-==BABL
-
-Babl is Another weBLog
+==Babl is Another weBLog
 
 
-
-
-=OmniAuth Presentation Outline
 
 =Introduction
 
@@ -13,6 +8,30 @@ Babl is Another weBLog
 @joshrowley, current student @FlatironSchool, former IT guy
 
 ==What does this presentation cover?
+
+OmniAuth
+
+1.  What is OmniAuth?
+    What does it do and why should we use it?
+
+2.  Anatomy of OmniAuth
+    How does it work?
+
+3.  Implementing OmniAuth
+    That's all fine and dandy, but how do I actually write the code?
+
+==What does this presentation *not* cover?
+
+1.  Other authentication libraries, and how they compare to OmniAuth
+    There are a ton of authentication libraries available for Rails
+    developers:
+      *   [devise](https://github.com/plataformatec/devise "Devise")
+      *   [authlogic](https://github.com/binarylogic/authlogic "Authlogic")
+      *   [clearance](https://github.com/thoughtbot/clearance "Clearance")
+      *   [sorcery](https://github.com/NoamB/sorcery "Sorcery")
+      *   [restful-authentication](https://github.com/technoweenie/restful-authentication "Restful Authentication")
+
+
 Deals with the common problem of authenticating users to your site.
 Will be a high level overview of authentication (specifically OAuth2)
 What can I use to integrate into my Rails application? => couple options, today: OmniAuth (abstracts away OAuth 2)
@@ -417,20 +436,21 @@ def create
   render :text => "Welcome, #{current_user.name}."
 end
 
-def create
+    def create
 
-  auth_hash = request.env['omniauth.auth']
+      auth_hash = request.env['omniauth.auth']
 
-  @authorization = Authorization.find_by_provider_and_uid(auth_hash["provider"], auth_hash["uid"])
-  if @authorization
-    render :text => "Welcome back #{@authorization.user.name}! You have already signed up."
-  else
-    user = User.new(:name => auth_hash.info.name, :email => auth_hash.info.email)
-    user.authorizations.build :provider => auth_hash["provider"], :uid => auth_hash["uid"]
-    user.save
-    render :text => "Hi #{user.name}! You've signed up."
-  end
-end
+      @authorization = Authorization.find_by_provider_and_uid(auth_hash.provider, auth_hash.uid)
+
+      if @authorization
+        render :text => "Welcome back #{@authorization.user.name}! You're logged in through #{@authorization.provider}."
+      else
+        user = User.new(:name => auth_hash.info.name, :email => auth_hash.info.email)
+        user.authorizations.build(:provider => auth_hash.provider, :uid => auth_hash.uid)
+        user.save
+        render :text => "Hi #{user.name}! Your account has been signed up."
+      end
+    end
 
 
 Challenge: Can you write a strategy?
