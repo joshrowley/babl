@@ -11,22 +11,21 @@ class SessionsController < ApplicationController
     auth = request.env['omniauth.auth']
 
     if @authorization = Authorization.find_by_provider_and_uid(auth.provider, auth.uid)
-      render :text => "Welcome back #{@authorization.user.name}! You're logged in through #{@authorization.provider}."
     else
       user = User.find_or_create_by_email(:name => auth.info.name, :email => auth.info.email)
       user.authorizations.build(:provider => auth.provider, :uid => auth.uid)
       user.save
-      render :text => "Hi #{user.name}! Your account has been signed up."
     end
 
     self.current_user = @authorization.user
-    
 
+    redirect_to root_url
   end
 
 
   def destroy
     session[:user_id] = nil
+    redirect_to root_url
   end
 
 
