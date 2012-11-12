@@ -1,4 +1,4 @@
--
+3-
 
 
 =0.0 Introduction
@@ -64,7 +64,7 @@ covering the following:
 =1.0 What is OmniAuth? Why should we use it?
 
 
-===1.1 The Authentication Problem
+==1.1 The Authentication Problem
 
 An example
 
@@ -99,9 +99,9 @@ show if there's no user login! What are their options?
 
 
 
-=== 1.2 Options for adding authentication
+== 1.2 Options for adding authentication
 
-1. Create authentication from scratch
+===1.2.1 Create authentication from scratch
 
 The team could try writing their own authentication system.
 
@@ -117,7 +117,7 @@ This will also take a long time and demo day is soon!
 
 
 
-2. Use existing authentication libraries
+===1.2.2 Use existing authentication libraries
 
 Devise, Authlogic, Clearance, Sorcery, Restful Authentication
 
@@ -136,7 +136,7 @@ flexibility for the future, when perhaps they'll add their own
 authentication. That leads them to...
 
 
-3. OmniAuth
+1.2.3 OmniAuth
 
 
 Written by Michael  Bleigh with support from his employer Intridea (dev shop) 
