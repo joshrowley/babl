@@ -15,6 +15,7 @@ class SessionsController < ApplicationController
       user = User.find_or_create_by_email(:name => auth.info.name, :email => auth.info.email)
       user.authorizations.build(:provider => auth.provider, :uid => auth.uid)
       user.save
+      @authorization = user.authorizations.first
     end
 
     self.current_user = @authorization.user
