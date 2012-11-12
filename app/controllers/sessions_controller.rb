@@ -18,6 +18,8 @@ class SessionsController < ApplicationController
       user.save
       render :text => "Hi #{user.name}! Your account has been signed up."
     end
+
+    self.current_user = @authorization.user
     
 
   end

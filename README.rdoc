@@ -1,4 +1,4 @@
-
+-
 
 
 =0.0 Introduction
@@ -654,7 +654,18 @@ When the same user comes to authenticate, since I already have their authorizati
 information in the database, it should execute the `else` block.
 
 
-===3.2.7: Actually, creating a session
+===3.2.7: Creating a session with a method in the Application Controller
+
+We want the user to stay logged in throughout the entire application.
+
+We'll put whether or not the user is logged in into the Application Controller,
+whose methods are inherited by every controller in our application.
+
+Now, how do I persist a user's presence with every later request they enter?
+
+We'll use the sessions 
+
+
 
 ===3.2.8: Creating the login link
 
@@ -662,6 +673,14 @@ information in the database, it should execute the `else` block.
 
 
 ==3.3 The world is your oyster!
+
+==Refactor the code:
+
+1. Push the logic out of the controller and down to the models.
+
+2. Cache the current user in an application wide instance variable.
+
+
 
 
 

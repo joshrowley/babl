@@ -22,6 +22,16 @@
         <span class="icon-bar"></span>
       </a>
       <a class="brand" href="#">BABL</a>
+          <div class="btn login">
+          <a>
+          <% if current_user %>
+            Signed in as <%= current_user.name %>
+          <% else %>
+            <%= link_to "Sign in with Facebook", "/auth/facebook" %>
+          <% end %>
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 </div>
