@@ -640,10 +640,25 @@ user.rb
 #TODO: Make a slide
 What should the sessions#create do:
 
-  1. When a user signs in, look for existing Authorizations for
-  that external account.  
-  2. Create a user if no authorization is found.
-  3. Add an authorization to an existing user if the user is already logged in.
+1. When a user signs in, look for existing Authorizations for
+that external account.  
+2. Create a user if no authorization is found.
+3. Add an authorization to an existing user if the user is already logged in.
+
+    auth = request.env['omniauth.auth']
+
+    if @authorization = Authorization.find_by_provider_and_uid(auth.provider, auth.uid)
+    else
+      user = User.find_or_create_by_email(:name => auth.info.name, :email => auth.info.email)
+      user.authorizations.build(:provider => auth.provider, :uid => auth.uid)
+      user.save
+      @authorization = user.authorizations.first
+    end
+
+    self.current_user = @authorization.user
+
+    redirect_to root_url
+
 
 
 So, let me clear my db real quick just to show you this logic is working.
