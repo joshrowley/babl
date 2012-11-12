@@ -360,6 +360,10 @@ Example from GitHub
 =3.0: Implement OmniAuth!!!
 
 
+===3.2.8: Creating the login link
+
+===3.2.9: Creating a logout
+
 ==3.1: Getting the authentication hash from Facebook.
 
 
@@ -681,10 +685,37 @@ Now, how do I persist a user's presence with every later request they enter?
 We'll use the sessions 
 
 
+===3.2.8 Add login and logout paths
 
-===3.2.8: Creating the login link
+`application.html.erb`
 
-===3.2.9: Creating a logout
+    <div class="btn logout">
+      <%= link_to "Logout", "/logout" %>
+    </div>
+    <div class="btn login">
+      <% if current_user %>
+        Signed in as <%= current_user.name %>
+      <% else %>
+        <%= link_to "Sign in with Facebook", "/auth/facebook" %>
+      <% end %>
+    </div>
+
+===3.2.9 Create logout path in routes
+
+`routes.rb`
+
+    match '/logout', :to => 'sessions#destroy'
+
+===3.2.10 Define sessions#destroy
+
+    def destroy
+      session[:user_id] = nil
+      redirect_to root_url
+    end
+
+
+
+
 
 
 ==3.3 The world is your oyster!
