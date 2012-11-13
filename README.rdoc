@@ -174,14 +174,8 @@ with whatever the future may hold.
 
 
 
+=2.0: Anatomy of OmniAuth: How does this work?\
 
-
-
-
-
-=2.0: Anatomy of OmniAuth: How does this work?
-
-SLIDE: Magic Box
 
 So this diagram is easy to follow. My application triggers
 something (a user clicking on login) that will indicate
@@ -197,11 +191,8 @@ we actually get into the actual implementation on how to integrate
 OmniAuth into our application, let's take a peek at the "magic".
 
 
-SLIDE: Facts about Omniauth
 
-
-
-===2.1: OmniAuth is middleware
+==2.1: OmniAuth is middleware
 
 OmniAuth is Rack middleware that can be used with any Rack based
 Ruby applications.
@@ -227,87 +218,102 @@ In a Rails application, you would add `config/initializers/omniauth.rb`
     end
 
 
-This tells Rails to use OmniAuth as middleware for facebook and twitter
-when the application boots. We'll go into this in more detail in the
-implementation.
+This tells Rails to use OmniAuth as middleware using the facebook and
+twitter strategies when the application boots.
 
 
 
-
-===2.2: Omniauth knows how to authenticate through "strategies"
+==2.2: Omniauth knows how to authenticate through "strategies"
 
 We'll take a look at the code a strategy entails in a little
 bit.
-
-SLIDE: providers again!
 
 What is a strategy? A bunch of Ruby code!
 
 Specifically, a strategy is class that inherits a bunch of
 magical stuff from an OmniAuth::Strategies module.
 
-
 Interaction with the strategy class can be defined into
 two phases: the request phase, and the callback phase
 
 
 
-===2.3 The Request Phase
+==2.3 The Request Phase
 
 The Request phase is triggered when your applications tells
 OmniAuth that it needs authentication.
 
 How do you tell OmniAuth this?
 
-The OmniAuth middleware listens for HTTP requests going to
-the path `/auth/:provider` where `:provider` refers to the
-specific provider strategy contained in `omniauth.rb`.
+The OmniAuth middleware listens for HTTP requests going
+through Rack on the path `/auth/:provider` where `:provider`
+refers to the specific provider strategy specified in
+`omniauth.rb` Rack configuration file.
 
 When OmniAuth receives the HTTP request from your web server
-(e.g. nginx, Apache), it starts the request phase.
+(e.g. nginx, Apache), it intervenes as a middleman in front of
+your application, and starts the request phase.
 
 What is the request phase?
 
 The first part of the strategy. All the necessary steps to
-authenticate with the external provider.
+authenticate with the external provider written in Ruby.
 
-As a developer, I don't know any of the details of how the strategy
-does this, I trust that it works.
+OmniAuth responds to the `auth/:provider` HTTP request and executes
+whatever code it needs to prepare that request for authentication
+for the proper provider.
 
-OmniAuth acts like a wrapper, sending whatever necessary information
-in the right format to the right provider.
+OmniAuth acts like a wrapper, accepting whatever necessary information
+needed for authentication (usually an App ID, and App secret provided by
+the external provider) and preparing it for the external provider
+according to the strategy.
 
 In OAuth, this is a redirect to the provider's auth interface (facebook)
 OpenID, LDAP, something else, the logic is different, but the abstract
 concept of what OmniAuth is doing is the same. It's communicating with
 the external provider's authentication API, whatever it may be.
 
+In the case of Facebook, OmniAuth sends along the App ID and App secret
+that were taken in as arguments to the strategy along with the
+site requesting authentication, the callback path, and a failure path
+(`/auth/failure`).
+
+
+==2.4 The Callback Phase
+
 The external provider then processes the authentication request (e.g.
-Facebook login), and sends back to OmniAuth whatever info it needs
-to indicate that the user passed or failed authentication. OmniAuth then
-triggers the callback phase.
+Facebook login), and sends back to the callback path whatever raw info it
+needs to indicate that the user passed authentication. OmniAuth
+then triggers the callback phase.
 
+The external provider sends an HTTP request back to
+`/auth/:provider/callback`.
 
-===2.4 The Callback Phase
+Again, OmniAuth intervenes on this HTTP request at the Rack layer since
+it recognizes the `/auth/:provider/callback` path as corresponding to
+a strategy it has in it's `omniauth.rb` file
 
 OmniAuth receives the raw response from Facebook's authentication system
 and then uses the strategy again to figure how to parse and format the
 response into the standard authentication hash that our application is
 expecting.
 
-OmniAuth will then set that authentication hash in the Rack environment
-and send a request to a `/auth/:provider/callback` route. Again, this
-hash will always contain the keys `provider`, `uid`, `info`, and
-`info['name']. Every strategy must return this hash and because of this
-we can easily add multiple providers since our application knows what
-to expect no matter what strategy we use.
+Once it creates the authentication hash, it stores it in a Rack request
+object, accessible in request.env['omniauth.auth'].
 
-===2.5 Your application's logic
+OmniAuth will then pass the request along to your application to a
+`/auth/:provider/callback` route. Again, this hash will always contain
+the keys `provider`, `uid`, `info`, and `info['name']. Every strategy
+must return this hash and because of this we can easily add multiple
+providers since our application knows what to expect no matter what
+strategy we use.
+
+==2.5 Your application's logic
 
 Great! Now this authentication hash has a way into your application, and
 you can feel free to do what you want with it.
 
-But, most likely, you'll want to add a SessionsController that the callback
+Most likely, you'll want to add a SessionsController that the callback
 phrase routes to that will find or create the User in your application.
 
 Everytime a user logs in with the same credentials through a provider, the
@@ -316,7 +322,7 @@ each time the user comes back it should find the same user, and associated
 permissions specific to your application.
 
 
-===2.6 Peeking at some strategies
+==2.6 Peeking at some strategies
 
 Let's take a quick look at some of the available strategies, and we can
 see that there are methods defined in the provider's class that link up
@@ -359,25 +365,24 @@ Example from GitHub
 
 =3.0: Implement OmniAuth!!!
 
-
-===3.2.8: Creating the login link
-
-===3.2.9: Creating a logout
-
 ==3.1: Getting the authentication hash from Facebook.
-
-
 
 ===3.1.0: Setup your application with the provider
 
 In the case of this Facebook example, I'm going to want to go to Facebook's Developer page, register my application, and grab the 
+APP ID and APP SECRET values from my developer page to put into
+the OmniAuth Rack configuration block.
 
 
 ===3.1.1: Add the provider's gem to your Gemfile
 
-    gem 'omniauth'
+    # gem 'omniauth'
     gem 'omniauth-facebook'
 
+The omniauth gem contains the modules that all the other provider
+gems inherit from, however you usually don't need to include
+it in your Gemfile since most provider gems require it as a
+dependency.
 
 
 ===3.1.2: Run bundle install to load OmniAuth into your application environment
@@ -385,12 +390,11 @@ In the case of this Facebook example, I'm going to want to go to Facebook's Deve
     $ bundle install
 
 
-===3.1.3: Create omniauth config file, so that OmniAuth middleware starts up
-with your app.
+===3.1.3: Create omniauth config file, so that OmniAuth middleware starts up with your app.
 
     $ touch config/initializers/omniauth.rb
 
-omniauth.rb
+`omniauth.rb`
 
     Rails.application.config.middleware.use OmniAuth::Builder do
       provider :facebook, 'APP_ID', 'APP_SECRET'
@@ -398,41 +402,45 @@ omniauth.rb
       provider :linked_in, 'CONSUMER_KEY', 'CONSUMER_SECRET'
     end
 
-===3.1.4: Verify that OmniAuth middleware is running
-
-So now we can see that OmniAuth should be running as middleware
+Let's run the server
 
     $ rails server
 
-Now, check out localhost:3000/auth/facebook
+And, now when we go to `/auth/facebook`, OmniAuth redirects us to
+Facebook to login.
 
-OmniAuth will do its magic based on the strategy given by the provider you specify.
+Seriously, that's how easy it is to set up OmniAuth. At least the
+middleware part.
 
-So OmniAuth did who, redirected to Facebook's auth system.
-Once the user entered correct password, Facebook tells OmniAuth the user is successfully
-authenticated and gives back user info in the format specific to FB's authentication
-method. OmniAuth is then going to go into the "callback" phase in order to transform
-what Facebook gave it back into a hash with the info as a Rack environment variable in
-a HTTP request to `/auth/:provider/callback
+So, now that we've just set up the OmniAuth middleware, what error
+will we expect when we try to start the callback phase after
+authenticating with Facebook?
 
-What error do we expect?
+Missing routes! But which route is going to be missing.
 
-Missing routes!
+OmniAuth sending back a Rack request with the authentication hash
+to our application to `/auth/facebook/callback`.
 
-We need to define a route and a controller that's going to handle the incoming request
-with authentication hash from OmniAuth.
+So, OmniAuth has already kicked in as middleware, and is routing
+`auth/facebook` to Facebook's authentication, and returning the
+Facebook hash. We're seriously done with the OmniAuth part, now we
+just need to build our application to do something meaningful with this.
 
-Generally, this is done using a SessionsController, with a route pointing to
-'sessions#create'. In that create method, we should have logic in our application
-that should either find a User of our application if that person has already
-authenticated before, or create a new user.
+We need to define a route and a controller that will take the hash in
+and create or find a user in our application.
+
+Conventionally, this is done using a SessionsController, with a route
+pointing to 'sessions#create'. In that create method, we should have
+logic in our application that should either find a User of our
+application if that person has already authenticated before with that
+provider, or create a new user.
 
 
-===3.1.5 Create the route that will respond to the callback message.
+===3.1.4 Create the route that will respond to the callback message from OmniAuth
 
 `routes.rb`
 
-    match '/auth/:provider/callback, :to => 'sessions#create'
+    match '/auth/:provider/callback', :to => 'sessions#create'
 
 
 Great, so I've made the route. What do I need to do next?
@@ -441,7 +449,7 @@ Create a controller method that responds to that route.
 
 
 
-===3.1.6 Create a sessions controller
+===3.1.5 Create a sessions controller
 
 
 So I'm going to generate a sessions controller.
@@ -451,12 +459,12 @@ So I'm going to generate a sessions controller.
 And then, write the create method:
 
 
-===3.1.7 Now to define the sessions#create method:
+===3.1.6 Now to define the sessions#create method:
 
 I'm just going to write something very simple for now, just to show
 that we are in fact now authenticating with Facebook.
 
-I'll just render the request incoming from Rack:
+I'll just render to text the request incoming from Rack:
 
 in `/app/controllers/sessions_controller.rb`
 
@@ -467,96 +475,80 @@ in `/app/controllers/sessions_controller.rb`
     end
 
 
+
+===3.1.7: Verify that OmniAuth is returning a hash
+
+So now we can see that OmniAuth should be running as middleware and
+returning a hash.
+
+    $ rails server
+
+OmniAuth will do its magic based on the strategy given by the provider
+you specify in `omniauth.rb`.
+
+OmniAuth responds to the `/auth/:provider` request from the web,
+looks at the strategy associated with the path, and follows the
+directions.
+
+In the case of Facebook & Oauth2, OmniAuth redirects to Facebook for
+the user to login.
+
+Once the user entered correct password, Facebook sends back a request
+to `/auth/:provider/callback` with the information about the user.
+
+OmniAuth, once again receives the request from your web server, before
+it hits your Rails application. It does whatever magic it needs to do
+as specified in the strategy's callback phase, constructs the
+authentication hash, adds it to a Rack request object and then passes it
+along to your Rails application using the same `/auth/:provider/callback`
+route.
+
+
 And, now if we go to the browser and go to `/auth/facebook`, the
 returned page should have the authentication hash in the source.
 
 
-#TODO: move this into a slide
-    '#<OmniAuth::AuthHash 
-        credentials=
-          #<Hashie::Mash
-            expires=true
-            expires_at=1357774112
-            token="AAAEV4AIlNYYBAE4MCGRj4RZAL1gWRboJqwXeYNZAqThDZA51fv3vIZCXIgIDz19vlalG7zyOBLfL0u2y8ZB6kiUJvF5vCE3wZD">
-      
-        extra=#<Hashie::Mash
-          raw_info=
-            #<Hashie::Mash
-                email="joshua.rowley@nyu.edu"
-                first_name="Josh"
-                gender="male"
-                id="837810"
-                last_name="Rowley"
-                link="http://www.facebook.com/joshuarowley"
-                locale="en_US"
-                name="Josh Rowley"
-                timezone=-5
-                updated_time="2012-10-12T02:49:25+0000"
-                username="joshuarowley"
-                verified=true
-              >
-          >
-        
-        info=
-          #<OmniAuth::AuthHash::InfoHash
-            email="joshua.rowley@nyu.edu"
-            first_name="Josh"
-            image="http://graph.facebookcom/837810/picture?type=square" last_name="Rowley"
-            name="Josh Rowley"
-            nickname="joshuarowley"
-            urls=
-              #<Hashie::Mash
-                Facebook="http://www.facebook.com/joshuarowley"
-                >
-            verified=true
-            >
+So, we can compare this with our spec of what the returned hash should
+look like and it should contain all our required info: `provider`, `uid`,
+`info['name']`.
 
+Note that in the latest version of OmniAuth, the hash is returned as
+a hashlike object called a Hashie Mashie. This object behaves pretty
+much exactly like a hash, except it also creates methods that allow us
+to access the hashes key, so that the following two syntaxes would
+return the same thing:
 
-        provider="facebook"
-
-        uid="837810">'
-
-
-
-
-So, we can compare this with our spec of what the returned hash should look like.
-
-**show slide with anatomy of a hash
-
-
-
-GREAT!
-
+    auth_hash['info']['name']
+    auth_hash.info.name
 
 
 ==3.2: Using that hash in our application
 
 
 Now we as developers have the hash, time to decide what to do with it.
-We're going to want to persist data about newly authenticated users, because they will now have blog posts that need can be associated with users.
+We're going to want to persist data about newly authenticated users,
+because they will now have blog posts that need can be associated with
+users.
 
 Thus, a User model is born!
 
-What do I want this User model to store. Well, what's great about OmniAuth is that I don't need to worry about whether some of my providers return a different type of object that the others. I always know that my hash is going to have the following information
-
-
-SHOW Bare Minimum
-
-SLIDE: attributes of the User
+What do I want this User model to store. Well, what's great about
+OmniAuth is that I don't need to worry about whether some of my providers
+return a different type of object that the others. I always know that my
+hash is going to have the following information
 
 auth.provider #=> identifies the auth service
 auth.uid #-> unique id for user on auth servcie
 auth.info.name #=> a name for the user
 
 
-The `uid` is going to be the unique identifier for that user in the context
-of the external provider, so that should be a column in our User model, so that
-when the user logs in again, it should pull up the same user.
+The `uid` is going to be the unique identifier for that user in the
+context of the external provider, so that should be a column in our User
+model, so that when the user logs in again, it should pull up the same
+user.
 
-
-User schema
-
-id    name    provider    uid  
+User schema  
+id    name    email   provider   uid 
 
 
 
@@ -565,15 +557,17 @@ Wait a second though, this model schema is going to cause issues for us.
 Can anyone predict the problem we're going to have? How is this going to
 affect us in the future?
 
-Things get dicey once you want to allow users to authenticate using multiple
-providers, and not just one. When the same person authenticates with a different
-provider, another User entry will be created, and what we want is for the multiple
-authentications to point to the same user record and thus will have the correct
-associations with other resources in our application.
+Things get dicey once you want to allow users to authenticate using
+multiple providers, and not just one. When the same person authenticates
+with a different provider, another User entry will be created, and what
+we want is for the multiple authentications to point to the same user
+record and thus will have the correct associations with other resources
+in our application. You'll have two entries in the users table that
+refer to the same person.
 
-The database is not normalized in this way, so we'll want to break out authorizations
-into its own model, where User `has_many :authorizations` and Authorization
-`belongs_to :authorization`.
+The database is not normalized in this way, so we'll want to break out
+authorizations into its own model, where User `has_many :authorizations`
+and Authorization `belongs_to :authorization`.
 
 So, let's build those models:
 
@@ -605,11 +599,12 @@ authorization.rb
 ===3.2.4: Validate authorization's atrributes presence and uniqueness.
 
 
-I'm also going to throw some validations on here, so that authorizations must be
-created with an associated user, an external unique ID, and which provider it's
-associated with, as well as validate the uniqueness of the uid in the scope/context
-of their providers (with multiple providers, we have to ensure that two providers
-can have the same uid for two entries).
+I'm also going to throw some validations on here, so that authorizations
+must be have an associated user (`user_id`), an external unique ID (`uid`)
+, and which `provider` it's associated with, as well as validate the 
+uniqueness of the `uid` in the scope of the given provider. When we
+start having multiple providers, we have to ensure that two providers
+could have the same `uid`.
 
 
 authorization.rb
@@ -625,8 +620,16 @@ authorization.rb
 ===3.2.5: Validate uniqueness of email
 
 
-I'll also validate the uniqueness of the `:email` attribuet of my User model, to
-make sure that I don't have multiple records associated to the same person.
+I'll also validate the uniqueness of the `:email` attribute of my User model. I'll be using `email` as a unique identifier for a certain
+person, so that once I start adding multiple providers, new authorizations
+will check the email against the users table to see whether this is
+and existing user's additional authentication, or if this is a completely
+new person.
+
+One thing to note is that Twitter does not return a user's email
+address, so you'll have to add something into the sessions controller
+that will prompt new authorizations for an email address to check
+against the users table.
 
 user.rb
 
@@ -641,51 +644,121 @@ user.rb
 ===3.2.6: Write 1st iteration of sessions create logic
 
 
-#TODO: Make a slide
-What should the sessions#create do:
-
-1. When a user signs in, look for existing Authorizations for
-that external account.  
+1. When a user signs in, look for existing Authorizations for that
+external account.  
 2. Create a user if no authorization is found.
 3. Add an authorization to an existing user if the user is already logged in.
 
-    auth = request.env['omniauth.auth']
+`sessions_controller.rb`
 
-    if @authorization = Authorization.find_by_provider_and_uid(auth.provider, auth.uid)
-    else
-      user = User.find_or_create_by_email(:name => auth.info.name, :email => auth.info.email)
-      user.authorizations.build(:provider => auth.provider, :uid => auth.uid)
-      user.save
-      @authorization = user.authorizations.first
+    def create
+
+      auth = request.env['omniauth.auth']
+
+      if @authorization = Authorization.find_by_provider_and_uid(auth.provider, auth.uid)
+      else
+        user = User.find_or_create_by_email(:email => auth.info.email)
+        user.name = auth.info.name,
+        @authorization = user.authorizations.build(:provider => auth.provider, :uid => auth.uid)
+        user.save
+      end
+
     end
 
-    self.current_user = @authorization.user
+Let me clear my db real quick just to show you this logic is working.
 
-    redirect_to root_url
+Now, when a user authenticates for the first time, it should create a
+new user.
 
+When the same user comes to authenticate, since I already have their
+authorization information in the database, it should find the
+authorization and find the user from the belongs_to association.
 
-
-So, let me clear my db real quick just to show you this logic is working.
-
-Now, when a user authenticates for the first time, it should create a user.
-
-When the same user comes to authenticate, since I already have their authorization
-information in the database, it should execute the `else` block.
 
 
 ===3.2.7: Creating a session with a method in the Application Controller
 
-We want the user to stay logged in throughout the entire application.
+Now we have @authorization, what do we do with it? Well, we'll want
+to create a session so that as the user browses through the app, he'll
+stay logged in until he logs out.
 
-We'll put whether or not the user is logged in into the Application Controller,
-whose methods are inherited by every controller in our application.
+The user's session should persist across the entire application, so
+I'll define a method `current_user` in the application controller 
+that's inherited by every single controller in my application that
+will tell give me the user who is currently logged in. In addition,
+to the getter `current_user` method, I'll define a setter method
+`current_user=` that my sessions controller will use to set set the
+user once they've authenticated:
+
+First, I'll put the expected method in my controller and then
+define it in the application controller:
+
+in `sessions_controller.rb`
+
+    def create
+        ...
+        user.save
+      end
+
+      self.current_user = @authorization.user
+    end
+
+We'll put whether or not the user is logged in into the Application
+Controller,whose methods are inherited by every controller in our
+application.
 
 Now, how do I persist a user's presence with every later request they enter?
 
-We'll use the sessions 
+We'll use the sessions, and Rails will automatically pass the data
+we put into the sessions hash using hidden forms and cookies.
+
+I'll also make `current_user` a helper method, which makes the method
+avaialable in my views. That way in my application view I can call
+the current user and display their name using some logic later.
+
+in `application_controller.rb`
+
+    class ApplicationController < ActionController::Base
+      protect_from_forgery
+
+      def current_user
+        User.find(session[:user_id])
+      end
+
+      def current_user=(user)
+        session[:user_id] = user.id
+      end
+
+      helper_method :current_user
+
+    end
 
 
-===3.2.8 Add login and logout paths
+
+The home stretch, all the heavy lifting is done, let's just
+wire everything up.
+
+===3.2.8 Set redirect for sessions#create
+
+So now to get the controller wired up with my view, instead of
+rendering the text from the authentication hash, I'll want to
+redirect to my home page.
+
+`sessions_controller.rb`
+
+    def create
+      ...
+      redirect_to root_url
+    end
+
+
+===3.2.9 Set up login and logout buttons
+
+I'll add add to my logout button a link to a `/logout` route.
+
+I'll also add a little bit of logic to either display the signed
+in user's name, or prompt the unauthenticated user to sign in using
+Facebook.
 
 `application.html.erb`
 
@@ -700,22 +773,20 @@ We'll use the sessions
       <% end %>
     </div>
 
-===3.2.9 Create logout path in routes
+===3.2.10 Create logout path in routes
 
 `routes.rb`
 
     match '/logout', :to => 'sessions#destroy'
 
-===3.2.10 Define sessions#destroy
+===3.2.11 Define sessions#destroy
+
+`sessions_controller.rb`
 
     def destroy
       session[:user_id] = nil
       redirect_to root_url
     end
-
-
-
-
 
 
 ==3.3 The world is your oyster!
@@ -726,68 +797,11 @@ We'll use the sessions
 
 2. Cache the current user in an application wide instance variable.
 
+3. Write the code that responds to `auth/failure`
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Make this a slide::Highlight undefined methods
-
-def create
-  auth = request.env['omniauth.auth']
-
-  unless @auth = Authorization.find_from_hash(auth)
-    @auth = Authorization.create_from_hash(auth, current_user)
-  end
-
-  self.current_user = @auth.user
-
-  render :text => "Welcome, #{current_user.name}."
-end
-
-    def create
-
-      auth_hash = request.env['omniauth.auth']
-
-      @authorization = Authorization.find_by_provider_and_uid(auth_hash.provider, auth_hash.uid)
-
-      if @authorization
-        render :text => "Welcome back #{@authorization.user.name}! You're logged in through #{@authorization.provider}."
-      else
-        user = User.new(:name => auth_hash.info.name, :email => auth_hash.info.email)
-        user.authorizations.build(:provider => auth_hash.provider, :uid => auth_hash.uid)
-        user.save
-        render :text => "Hi #{user.name}! Your account has been signed up."
-      end
-    end
+4. Twitter doesn't return `auth.info.email`, write whatever code
+necessary to deal will an already registered user who wishes to add
+Twitter authentication that is linked to his same `uid`
 
 
 Challenge: Can you write a strategy?
-
-
-
-
-
-
