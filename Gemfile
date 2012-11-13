@@ -30,7 +30,6 @@ end
   gem 'jquery-rails'
 
   # 3.1.1
-  gem 'omniauth-facebook'
 
 
 # To use ActiveModel has_secure_password

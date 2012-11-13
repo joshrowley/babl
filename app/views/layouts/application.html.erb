@@ -23,14 +23,12 @@
       </a>
       <a class="brand" href="/">BABL</a>
       <div class="btn logout">
-        <%= link_to "Logout", "/logout" %>
+        <!-- 3.2.9 -->
+        <%= link_to "Logout", "#" %>
       </div>
       <div class="btn login">
-        <% if current_user %>
-          Signed in as <%= current_user.name %>
-        <% else %>
-          <%= link_to "Sign in with Facebook", "/auth/facebook" %>
-        <% end %>
+         <!-- 3.2.9 -->
+        <%= link_to "Sign in with Facebook", "#" %>
       </div>
       </div>
     </div>

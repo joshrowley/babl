@@ -4,7 +4,7 @@
 # App Secret
 '53985e48bc5b0c0318d1567763477f9b'
 
-# 3.1.1
+# 3.1.1 - Gemfile
 gem 'omniauth-facebook'
 
 # 3.1.3 - omniauth.rb
