@@ -115,7 +115,7 @@ flexibility for the future, when perhaps they'll add their own
 authentication. That leads them to...
 
 
-1.2.3 OmniAuth
+===1.2.3 OmniAuth
 
 
 Written by Michael  Bleigh with support from his employer Intridea (dev shop) 
