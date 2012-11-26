@@ -2,13 +2,14 @@
 
 Here are the resources that helped me put together the presentation:
 
-<a href="http://net.tutsplus.com/tutorials/ruby/how-to-use-omniauth-to-authenticate-your-users/">How to use Omniauth to Authenticate Your Users</a> gives an example using Facebook
-http://blog.railsrumble.com/2010/10/08/intridea-omniauth/
+[Good tutorial using Facebook]("http://net.tutsplus.com/tutorials/ruby/how-to-use-omniauth-to-authenticate-your-users/)
 
-This <a href="http://www.intridea.com/blog/2011/5/31/omniauth-from-the-ground-up">video</a> Michael Bleigh, the maintainer of omniauth, discussing it:
+[Great tutorial from Intridea](http://blog.railsrumble.com/2010/10/08/intridea-omniauth/)
+
+[Michael Bleigh, the maintainer of omniauth, discussing OmniAuth]("http://www.intridea.com/blog/2011/5/31/omniauth-from-the-ground-up)
 
 
-Ryan Bates also has a very good <a href="http://railscasts.com/episodes/241-simple-omniauth-revised">screencast</a> about using omniauth with Twitter, although you'll need a subscription. He has a couple more good screencasts about Omniauth and authentication in general.
+Ryan Bates also has a very good [screencast](http://railscasts.com/episodes/241-simple-omniauth-revised) about using omniauth with Twitter, although you'll need a subscription. He has a couple more good screencasts about Omniauth and authentication on the site, the entire resource is worth the monthly subscription.
 
 
 
