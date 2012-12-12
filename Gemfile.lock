@@ -67,6 +67,7 @@ GEM
     mime-types (1.19)
     multi_json (1.3.7)
     multipart-post (1.1.5)
+    oauth (0.4.7)
     oauth2 (0.8.0)
       faraday (~> 0.8)
       httpauth (~> 0.1)
@@ -78,6 +79,9 @@ GEM
       rack
     omniauth-facebook (1.4.1)
       omniauth-oauth2 (~> 1.1.0)
+    omniauth-oauth (1.0.1)
+      oauth
+      omniauth (~> 1.0)
     omniauth-oauth2 (1.1.1)
       oauth2 (~> 0.8.0)
       omniauth (~> 1.0)
@@ -142,6 +146,7 @@ DEPENDENCIES
   jquery-rails
   less-rails
   omniauth-facebook
+  omniauth-oauth
   pg
   rails (= 3.2.8)
   sass-rails (~> 3.2.3)

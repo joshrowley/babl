@@ -31,6 +31,7 @@ end
 
   # 3.1.1
   gem 'omniauth-facebook'
+  gem 'omniauth-oauth'
 
 
 # To use ActiveModel has_secure_password
