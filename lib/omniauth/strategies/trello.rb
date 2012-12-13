@@ -1,4 +1,5 @@
 require "omniauth-oauth"
+require 'multi_json'
 
 module OmniAuth
   module Strategies
@@ -10,24 +11,24 @@ module OmniAuth
                                 :authorize_path => "/1/OAuthAuthorizeToken" }
 
       uid do
-        1
+        raw_info['id']
       end
 
       info do
         {
-          :name => "test_name",
-          :location => "test_location"
+          :name => raw_info['fullName']
         }
       end
 
 
       extra do
         {
-          'raw_info' => "test_raw_info"
+          'raw_info' => raw_info
         }
       end
 
       def raw_info
+        @raw_info ||= MultiJson.decode(access_token.get('/1/members/me').body)
       end
     end
   end

@@ -1,4 +1,7 @@
 require 'omniauth-oauth'
+require 'multi_json'
+
+
 class Trello < OmniAuth::Strategies::OAuth
       option :name, "trello"
       option :client_options, { :site => "https://trello.com",

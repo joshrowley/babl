@@ -4,11 +4,11 @@ class SessionsController < ApplicationController
 
 
     #3.1.7
-    # render :text => request.env['omniauth.auth'].inspect.to_yaml
+    render :text => request.env['omniauth.auth'].inspect.to_yaml
 
 
     #3.2.6
-    render :text => request.env['omniauth.auth']
+    # auth = request.env['omniauth.auth']
 
     # if @authorization = Authorization.find_by_provider_and_uid(auth.provider, auth.uid)
     # else
