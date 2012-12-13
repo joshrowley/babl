@@ -4,27 +4,26 @@ class Trello < OmniAuth::Strategies::OAuth
       option :client_options, { :site => "https://trello.com",
                                 :request_token_path => "/1/OAuthGetRequestToken",
                                 :access_token_path => "/1/OAuthGetAccessToken",
-                                :authorize_path => "/1/OAuthAuthorizeToken",
-                                :name => "App Name Yo!" }
+                                :authorize_path => "/1/OAuthAuthorizeToken" }
 
       uid do
-        1
+        raw_info['id']
       end
 
       info do
         {
-          :name => "test_name",
-          :location => "test_location"
+          :name => raw_info['fullName']
         }
       end
 
 
       extra do
         {
-          'raw_info' => "test_raw_info"
+          'raw_info' => raw_info
         }
       end
 
       def raw_info
+        @raw_info ||= MultiJson.decode(access_token.get('/1/members/me').body)
       end
 end

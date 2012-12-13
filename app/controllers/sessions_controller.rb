@@ -8,19 +8,19 @@ class SessionsController < ApplicationController
 
 
     #3.2.6
-    auth = request.env['omniauth.auth']
+    render :text => request.env['omniauth.auth']
 
-    if @authorization = Authorization.find_by_provider_and_uid(auth.provider, auth.uid)
-    else
-      user = User.find_or_create_by_email(:name => auth.info.name, :email => auth.info.email)
-      user.authorizations.build(:provider => auth.provider, :uid => auth.uid)
-      user.save
-      @authorization = user.authorizations.first
-    end
+    # if @authorization = Authorization.find_by_provider_and_uid(auth.provider, auth.uid)
+    # else
+    #   user = User.find_or_create_by_email(:name => auth.info.name, :email => auth.info.email)
+    #   user.authorizations.build(:provider => auth.provider, :uid => auth.uid)
+    #   user.save
+    #   @authorization = user.authorizations.first
+    # end
 
-    self.current_user = @authorization.user
+    # self.current_user = @authorization.user
 
-    redirect_to root_url
+    # redirect_to root_url
   end
 
 
