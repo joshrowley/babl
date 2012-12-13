@@ -22,7 +22,6 @@ group :assets do
   # gem 'therubyracer', :platforms => :ruby
 
   gem 'uglifier', '>= 1.0.3'
-  gem "therubyracer"
   gem "less-rails" #Sprockets (what Rails 3.1 uses for its asset pipeline) supports LESS
   gem "twitter-bootstrap-rails"
 end
@@ -31,7 +30,7 @@ end
 
   # 3.1.1
   gem 'omniauth-facebook'
-  gem 'omniauth-oauth'
+  gem 'omniauth-trello', :github => 'joshrowley/omniauth-trello'
 
 
 # To use ActiveModel has_secure_password
